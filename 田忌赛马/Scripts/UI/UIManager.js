@@ -146,6 +146,10 @@ class UIManager {
             if (!this.audioContext) {
                 this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 console.log('音频上下文已创建');
+            } else if (this.audioContext.state === 'suspended') {
+                this.audioContext.resume().then(() => {
+                    console.log('音频上下文已恢复');
+                });
             }
         }, { once: true });
     }
