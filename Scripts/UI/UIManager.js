@@ -237,10 +237,13 @@ class UIManager {
         console.log('UIManager init 被调用，资源:', resources);
         
         // 更新资源加载路径
-        this.resources.images.background = await this.loadImage(`${this.buttonImagePath}/background.png`);
-        this.resources.images.startButton = await this.loadImage(`${this.buttonImagePath}/startButton.png`);
-        this.resources.images.competeButton = await this.loadImage(`${this.buttonImagePath}/competeButton.png`);
-        
+        this.resources.images.background = await this.loadImage(`${this.buttonImagePath}/bg_game.png`);
+        this.resources.images.startButton = await this.loadImage(`${this.buttonImagePath}/btn_start.png`);
+        this.resources.images.competeButton = await this.loadImage(`${this.buttonImagePath}/btn_compete.png`);
+        this.resources.images.startSettlementButton = await this.loadImage(`${this.buttonImagePath}/btn_fight.png`);
+        this.resources.images.rulesButton = await this.loadImage(`${this.buttonImagePath}/btn_rule.png`);
+
+
         // 加载卡牌图片
         for (const card of this.cards) {
             card.image = await this.loadImage(`${this.cardImagePath}/${card.suit}_${card.rank}.png`);
@@ -357,14 +360,47 @@ class UIManager {
             
             // 仅在不显示结果弹窗时绘制开始结算按钮
             if (!this.showResultDialog) {
+                
                 this.renderButton(
-                    this.resources.images.competeButton,
+                    this.resources.images.startSettlementButton,
                     this.startSettlementButtonX,
                     this.startSettlementButtonY,
                     this.gameButtonWidth,
                     this.gameButtonHeight
                 );
+
             }
+        }
+
+        // 添加规则按钮的渲染
+        if (this.resources.images.rulesButton) {
+            const rulesButtonX = this.flipButton1X - 200; // 计算规则按钮的X坐标
+            const rulesButtonY = this.flipButton1Y; // Y坐标与开始结算按钮相同
+
+            this.renderButton(
+                this.resources.images.rulesButton,
+                rulesButtonX,
+                rulesButtonY,
+                this.gameButtonWidth,
+                this.gameButtonHeight
+            );
+
+            // 添加规则按钮点击事件
+            const rulesButtonClickHandler = (event) => {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+
+                if (this.isPointInButton(x, y, rulesButtonX, rulesButtonY)) {
+                    console.log('点击规则按钮'); // 输出点击规则按钮的消息
+                    this.showRulesDialog(); // 显示规则面板
+                }
+            };
+
+            // 移除之前的事件监听器（如果有的话）
+            this.canvas.removeEventListener('click', rulesButtonClickHandler);
+            // 添加新的事件监听器
+            this.canvas.addEventListener('click', rulesButtonClickHandler);
         }
     }
 
@@ -756,6 +792,9 @@ class UIManager {
         const firstValue1 = this.getCardValue(this.cards[0]);
         const firstValue2 = this.getCardValue(this.cards[6]);
         
+        console.log(`玩家1的第一张卡牌点数: ${firstValue1}`);
+        console.log(`玩家2的第一张卡牌点数: ${firstValue2}`);
+        
         // 比较大小并计分
         if (firstValue1 > firstValue2) {
             this.player1Score++;
@@ -945,7 +984,7 @@ class UIManager {
 
     getCardValue(card) {
         const rankValues = {
-            'ace': 14,
+            'ace': 1,
             'king': 13,
             'queen': 12,
             'jack': 11,
@@ -1099,10 +1138,10 @@ class UIManager {
 
     getCardName(card) {
         const suitNames = {
-            'hearts': '红桃',
-            'diamonds': '方块',
-            'clubs': '梅花',
-            'spades': '黑桃'
+            'heart': '红桃',
+            'diamond': '方块',
+            'club': '梅花',
+            'spade': '黑桃'
         };
         
         const rankNames = {
@@ -1157,5 +1196,51 @@ class UIManager {
         });
         
         return record;
+    }
+
+    // 添加显示规则面板的方法
+    showRulesDialog() {
+        // 检查面板是否已经存在
+        if (document.getElementById('rulesDialog')) {
+            console.log('规则面板已存在，无法重复添加');
+            return; // 如果面板已存在，则不再添加
+        }
+
+        console.log('弹出规则面板');
+
+        const dialog = document.createElement('div');
+        dialog.id = 'rulesDialog'; // 为面板设置唯一ID
+        dialog.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: rgba(0, 0, 0, 0.5) 0px 0px 10px;
+            z-index: 1000;
+        `;
+
+        const title = document.createElement('h2');
+        title.textContent = '游戏规则';
+        title.style.marginBottom = '20px';
+        dialog.appendChild(title);
+
+        const content = document.createElement('p');
+        content.textContent = '这是每人发6张，各自看自己的牌。其中一张用来比大小，两张用来玩十点半，三张玩炸金花规则。比大小顺序：K>Q>J>10>9>8>7>6>5>4>3>2>A。十点半:1-10是对应的点数，JOK算半点。两张牌相加越接近十点半越大，超过十点半算爆炸金花:豹子>同花顺>同花>顺子>对子>单张'; // 显示规则文本
+        dialog.appendChild(content);
+        
+        const closeButton = document.createElement('button');
+        closeButton.innerText = '关闭';
+        closeButton.onclick = () => {
+            document.body.removeChild(dialog);
+            console.log('规则面板已关闭');
+        };
+
+        dialog.appendChild(closeButton);
+        document.body.appendChild(dialog);
+
+        console.log('规则面板已添加到DOM:', dialog);
     }
 }

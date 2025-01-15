@@ -43,4 +43,24 @@ class ResourceLoader {
             throw error;
         }
     }
+
+    loadImage(name, src) {
+        const img = new Image();
+        img.src = src;
+        console.log(`尝试加载图片: ${src}`);
+        img.onload = () => {
+            this.resources.images[name] = img;
+            this.loadedCount++;
+            console.log(`资源加载成功: ${name} (${this.loadedCount}/${this.totalCount})`);
+            if (name === 'rulesButton') {
+                console.log(`规则按钮图片加载成功: ${img.src}`);
+            }
+            if (this.loadedCount === this.totalCount) {
+                this.onAllResourcesLoaded();
+            }
+        };
+        img.onerror = () => {
+            console.error(`资源加载失败: ${name}，路径: ${src}`);
+        };
+    }
 }

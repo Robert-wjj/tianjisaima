@@ -98,7 +98,39 @@ class GameController {
         firstCard1.faceUp = true;
         firstCard2.faceUp = true;
 
-        return this.compareCardValues(firstCard1, firstCard2);
+        // 自定义比较逻辑
+        const valueMap = {
+            'ace': 1,   // A 最小
+            '2': 2,
+            '3': 3,
+            '4': 4,
+            '5': 5,
+            '6': 6,
+            '7': 7,
+            '8': 8,
+            '9': 9,
+            '10': 10,
+            'jack': 11,
+            'queen': 12,
+            'king': 13   // K 最大
+        };
+
+        const value1 = valueMap[firstCard1.rank];
+        const value2 = valueMap[firstCard2.rank];
+
+        console.log(`比较: ${firstCard1.rank} (${value1}) vs ${firstCard2.rank} (${value2})`);
+
+        // 确定赢家
+        if (value1 < value2) {
+            console.log('玩家2获得1分');
+            return 2; // 玩家2得分
+        } else if (value1 > value2) {
+            console.log('玩家1获得1分');
+            return 1; // 玩家1得分
+        } else {
+            console.log('平局');
+            return 0; // 平局
+        }
     }
 
     // 第二步结算：比较第2、3张牌的点数和
@@ -141,12 +173,25 @@ class GameController {
     // 辅助方法：比较单张牌的大小
     compareCardValues(card1, card2) {
         const valueMap = {
-            '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
-            'jack': 11, 'queen': 12, 'king': 13, 'ace': 14
+            'ace': 1,   // A 最小
+            '2': 2,
+            '3': 3,
+            '4': 4,
+            '5': 5,
+            '6': 6,
+            '7': 7,
+            '8': 8,
+            '9': 9,
+            '10': 10,
+            'jack': 11,
+            'queen': 12,
+            'king': 13   // K 最大
         };
 
-        const value1 = valueMap[card1.value];
-        const value2 = valueMap[card2.value];
+        const value1 = valueMap[card1.rank];
+        const value2 = valueMap[card2.rank];
+
+        console.log(`比较: ${card1.rank} (${value1}) vs ${card2.rank} (${value2})`);
 
         return {
             firstCardValue: value1,

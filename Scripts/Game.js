@@ -23,6 +23,12 @@ class Game {
         startSettlementButton.innerText = '开始结算';
         document.body.appendChild(startSettlementButton);
         startSettlementButton.style.display = 'none'; // 初始隐藏
+
+        // 添加规则按钮元素
+        this.rulesButton = document.createElement('button');
+        this.rulesButton.innerText = '规则';
+        document.body.appendChild(this.rulesButton);
+        this.rulesButton.style.display = 'none'; // 初始隐藏
     }
     
     update() {
@@ -72,6 +78,13 @@ class Game {
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
 
+        // 检查开始按钮点击
+        if (this.isPointInButton(x, y, this.startButtonX, this.startButtonY)) {
+            this.startButtonClicked = true; // 标记开始按钮已点击
+            console.log('startButton 被点击'); // 添加日志
+            this.render(); // 重新渲染以显示规则按钮
+        }
+
         // 检查玩家1确认按钮点击
         if (!this.player1Confirmed && this.isPointInButton(x, y, this.confirmButton1X, this.confirmButton1Y)) {
             this.player1Confirmed = true;
@@ -105,6 +118,7 @@ class Game {
     checkStartSettlement() {
         if (this.player1Confirmed && this.player2Confirmed) {
             startSettlementButton.style.display = 'block'; // 显示开始结算按钮
+            console.log('startSettlementButton 显示'); // 添加日志
         } else {
             startSettlementButton.style.display = 'none'; // 隐藏开始结算按钮
         }
@@ -188,6 +202,7 @@ class Game {
         // 根据游戏状态绘制不同的UI
         if (this.gameState === 'MENU') {
             this.renderMenu();
+            console.log('startButton 已渲染'); // 添加日志
         } else if (this.gameState === 'PLAYING') {
             this.renderGame();
             
@@ -200,19 +215,71 @@ class Game {
                     this.gameButtonWidth,
                     this.gameButtonHeight
                 );
+                console.log('startSettlementButton 已渲染'); // 添加日志
             }
         }
 
-        // 仅在不显示结果弹窗时绘制开始结算按钮
+        // 仅在不显示结果弹窗时绘制规则按钮
         if (!this.showResultDialog) {
-            this.renderButton(
-                this.resources.images.startSettlementButton, // 使用开始结算按钮的图像
-                this.startSettlementButtonX,
-                this.startSettlementButtonY,
-                this.gameButtonWidth,
-                this.gameButtonHeight
-            );
+            // 规则按钮在点击startButton后显示
+            if (this.startButtonClicked) {
+                this.rulesButton.style.display = 'block'; // 显示规则按钮
+                console.log('rulesButton 已渲染'); // 添加日志
+            }
         }
+    }
+
+    processStep1() {
+        console.log('第一步结算：比较第一张牌');
+        
+        // 翻开第一张牌
+        this.cards[0].faceUp = true;
+        this.cards[6].faceUp = true;
+        
+        // 获取点数并比较
+        const firstValue1 = this.getCardValue(this.cards[0]);
+        const firstValue2 = this.getCardValue(this.cards[6]);
+        
+        // 修改比较逻辑
+        const rankOrder = {
+            'ace': 1,
+            '2': 2,
+            '3': 3,
+            '4': 4,
+            '5': 5,
+            '6': 6,
+            '7': 7,
+            '8': 8,
+            '9': 9,
+            '10': 10,
+            'jack': 11,
+            'queen': 12,
+            'king': 13 // A的值设为1
+        };
+
+        const value1 = rankOrder[this.cards[0].rank] || 0;
+        const value2 = rankOrder[this.cards[6].rank] || 0;
+
+        // 比较大小并计分
+        if (value1 > value2) {
+            this.player1Score++;
+            console.log('玩家1获得1分');
+        } else if (value2 > value1) {
+            this.player2Score++;
+            console.log('玩家2获得1分');
+        }
+        
+        // 更新记录中的玩家名称
+        this.gameRecord.step1Result = `第一步：${this.player1Name} ${this.getCardName(this.cards[0])} vs ${this.player2Name} ${this.getCardName(this.cards[6])}`;
+        if (value1 > value2) {
+            this.gameRecord.step1Result += ` - ${this.player1Name}得分`;
+        } else if (value2 > value1) {
+            this.gameRecord.step1Result += ` - ${this.player2Name}得分`;
+        } else {
+            this.gameRecord.step1Result += ' - 平局';
+        }
+        
+        this.needsRedraw = true;
     }
 }
 
